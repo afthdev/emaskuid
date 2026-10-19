@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:emaskuid/controllers/price_controller.dart';
 import 'package:emaskuid/app/theme/app_theme.dart';
+import 'package:emaskuid/core/testing/test_ids.dart';
 import 'package:emaskuid/core/utils/formatters.dart';
 import 'package:emaskuid/data/models/models.dart';
 import 'package:emaskuid/screens/compare/compare_entry.dart';
@@ -85,10 +86,13 @@ class _ComparePageState extends State<ComparePage> {
                   separatorBuilder: (_, _) => const SizedBox(width: 8),
                   itemBuilder: (_, i) {
                     final w = weights[i];
-                    return ChoiceChip(
-                      label: Text(Fmt.gram(w)),
-                      selected: weight == w,
-                      onSelected: (_) => setState(() => _weight = w),
+                    return SemId(
+                      TestIds.compareWeightChip(w),
+                      child: ChoiceChip(
+                        label: Text(Fmt.gram(w)),
+                        selected: weight == w,
+                        onSelected: (_) => setState(() => _weight = w),
+                      ),
                     );
                   },
                 ),
@@ -121,7 +125,12 @@ class _ComparePageState extends State<ComparePage> {
       return const [
         Padding(
           padding: EdgeInsets.symmetric(vertical: 40),
-          child: Center(child: Text('Tidak ada toko dengan berat ini.')),
+          child: Center(
+            child: SemId(
+              TestIds.compareNoVendor,
+              child: Text('Tidak ada toko dengan berat ini.'),
+            ),
+          ),
         ),
       ];
     }
@@ -146,53 +155,61 @@ class _ComparePageState extends State<ComparePage> {
 
     final scheme = Theme.of(context).colorScheme;
     return [
-      Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Ringkasan ${Fmt.gram(weight)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
+      SemId(
+        TestIds.compareSummary,
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ringkasan ${Fmt.gram(weight)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _highlight(
-                      icon: Icons.shopping_cart_checkout_rounded,
-                      title: 'Beli termurah',
-                      vendor: bestBuy.source.displayName,
-                      value: Fmt.rupiah(bestBuy.price.sellPrice),
-                      color: AppTheme.gain,
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _highlight(
+                        testId: TestIds.compareBestBuy,
+                        icon: Icons.shopping_cart_checkout_rounded,
+                        title: 'Beli termurah',
+                        vendor: bestBuy.source.displayName,
+                        value: Fmt.rupiah(bestBuy.price.sellPrice),
+                        color: AppTheme.gain,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _highlight(
-                      icon: Icons.sell_rounded,
-                      title: 'Jual tertinggi',
-                      vendor: bestSell?.source.displayName ?? '—',
-                      value: Fmt.rupiah(bestSell?.price.buybackPrice),
-                      color: scheme.primary,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _highlight(
+                        testId: TestIds.compareBestSell,
+                        icon: Icons.sell_rounded,
+                        title: 'Jual tertinggi',
+                        vendor: bestSell?.source.displayName ?? '—',
+                        value: Fmt.rupiah(bestSell?.price.buybackPrice),
+                        color: scheme.primary,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
       const SizedBox(height: 16),
-      Text(
-        '${entries.length} toko',
-        style: TextStyle(
-          color: scheme.onSurfaceVariant,
-          fontWeight: FontWeight.w600,
+      SemId(
+        TestIds.compareVendorCount,
+        child: Text(
+          '${entries.length} toko',
+          style: TextStyle(
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       const SizedBox(height: 8),
@@ -201,40 +218,44 @@ class _ComparePageState extends State<ComparePage> {
   }
 
   Widget _highlight({
+    required String testId,
     required IconData icon,
     required String title,
     required String vendor,
     required String value,
     required Color color,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 11.5,
-              color: color,
-              fontWeight: FontWeight.w700,
+    return SemId(
+      testId,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 11.5,
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            vendor,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-          PriceText(value, style: const TextStyle(fontSize: 13)),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              vendor,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            PriceText(value, style: const TextStyle(fontSize: 13)),
+          ],
+        ),
       ),
     );
   }
@@ -248,96 +269,99 @@ class _ComparePageState extends State<ComparePage> {
     final isBestBuy = entry == bestBuy;
     final isBestSell = bestSell != null && entry == bestSell;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Card(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () =>
-              Get.to(() => VendorDetailPage(source: entry.source.name)),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    VendorAvatar(
-                      name: entry.source.displayName,
-                      imageUrl: entry.source.favicon,
-                      size: 38,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            entry.source.displayName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14,
+    return SemId(
+      TestIds.compareVendorItem(entry.source.name),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Card(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () =>
+                Get.to(() => VendorDetailPage(source: entry.source.name)),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      VendorAvatar(
+                        name: entry.source.displayName,
+                        imageUrl: entry.source.favicon,
+                        size: 38,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              entry.source.displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                              ),
                             ),
-                          ),
-                          Text(
-                            Fmt.shortMaterialType(entry.price.materialType),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: scheme.onSurfaceVariant,
+                            Text(
+                              Fmt.shortMaterialType(entry.price.materialType),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: scheme.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    if (isBestBuy)
-                      const Pill(
-                        text: 'Termurah',
-                        color: AppTheme.gain,
-                        icon: Icons.arrow_downward_rounded,
-                      )
-                    else if (isBestSell)
-                      Pill(
-                        text: 'Jual terbaik',
-                        color: scheme.primary,
-                        icon: Icons.arrow_upward_rounded,
+                      if (isBestBuy)
+                        const Pill(
+                          text: 'Termurah',
+                          color: AppTheme.gain,
+                          icon: Icons.arrow_downward_rounded,
+                        )
+                      else if (isBestSell)
+                        Pill(
+                          text: 'Jual terbaik',
+                          color: scheme.primary,
+                          icon: Icons.arrow_upward_rounded,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: StatTile(
+                          label: 'Harga beli',
+                          value: Fmt.rupiah(entry.price.sellPrice),
+                          icon: Icons.shopping_bag_outlined,
+                          valueColor: isBestBuy ? AppTheme.gain : null,
+                          dense: true,
+                        ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: StatTile(
-                        label: 'Harga beli',
-                        value: Fmt.rupiah(entry.price.sellPrice),
-                        icon: Icons.shopping_bag_outlined,
-                        valueColor: isBestBuy ? AppTheme.gain : null,
-                        dense: true,
+                      Expanded(
+                        child: StatTile(
+                          label: 'Buyback',
+                          value: Fmt.rupiah(entry.price.buybackPrice),
+                          icon: Icons.sell_outlined,
+                          valueColor: isBestSell ? scheme.primary : null,
+                          dense: true,
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: StatTile(
-                        label: 'Buyback',
-                        value: Fmt.rupiah(entry.price.buybackPrice),
-                        icon: Icons.sell_outlined,
-                        valueColor: isBestSell ? scheme.primary : null,
-                        dense: true,
+                      Expanded(
+                        child: StatTile(
+                          label: 'Selisih',
+                          value: Fmt.rupiahCompact(entry.price.spread),
+                          icon: Icons.swap_horiz_rounded,
+                          dense: true,
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: StatTile(
-                        label: 'Selisih',
-                        value: Fmt.rupiahCompact(entry.price.spread),
-                        icon: Icons.swap_horiz_rounded,
-                        dense: true,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 6),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

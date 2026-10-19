@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -15,6 +16,14 @@ import 'package:emaskuid/data/repositories/transaction_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // External drivers (Appium UiAutomator2 / XCUITest) cannot start the platform
+  // accessibility service on their own, so the semantics tree — and with it the
+  // TestIds identifiers — stays empty. Build with --dart-define=E2E=true to keep
+  // it on. No effect on normal builds.
+  if (const bool.fromEnvironment('E2E')) {
+    SemanticsBinding.instance.ensureSemantics();
+  }
 
   await initializeDateFormatting('id_ID');
 

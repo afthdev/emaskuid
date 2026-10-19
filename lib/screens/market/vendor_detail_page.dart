@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:emaskuid/controllers/price_controller.dart';
 import 'package:emaskuid/controllers/watchlist_controller.dart';
 import 'package:emaskuid/app/theme/app_theme.dart';
+import 'package:emaskuid/core/testing/test_ids.dart';
 import 'package:emaskuid/core/utils/formatters.dart';
 import 'package:emaskuid/data/models/models.dart';
 import 'package:emaskuid/widgets/widgets.dart';
@@ -180,17 +181,23 @@ class _VendorDetailPageState extends State<VendorDetailPage> {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (_, i) {
               if (i == 0) {
-                return ChoiceChip(
-                  label: const Text('Semua'),
-                  selected: _selectedType == null,
-                  onSelected: (_) => setState(() => _selectedType = null),
+                return SemId(
+                  TestIds.vendorTypeChip('all'),
+                  child: ChoiceChip(
+                    label: const Text('Semua'),
+                    selected: _selectedType == null,
+                    onSelected: (_) => setState(() => _selectedType = null),
+                  ),
                 );
               }
               final type = types[i - 1];
-              return ChoiceChip(
-                label: Text(Fmt.shortMaterialType(type)),
-                selected: _selectedType == type,
-                onSelected: (_) => setState(() => _selectedType = type),
+              return SemId(
+                TestIds.vendorTypeChip(type),
+                child: ChoiceChip(
+                  label: Text(Fmt.shortMaterialType(type)),
+                  selected: _selectedType == type,
+                  onSelected: (_) => setState(() => _selectedType = type),
+                ),
               );
             },
           ),
@@ -206,75 +213,86 @@ class _VendorDetailPageState extends State<VendorDetailPage> {
         ? null
         : Fmt.parseDate(rows.first.recordedDate);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                VendorAvatar(
-                  name: src?.displayName ?? widget.source,
-                  imageUrl: src?.favicon,
-                  size: 52,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        src?.displayName ?? widget.source,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        latestDate == null
-                            ? 'Data terakhir —'
-                            : 'Diperbarui ${Fmt.date(latestDate)}',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 12.5,
-                        ),
-                      ),
-                    ],
+    return SemId(
+      TestIds.vendorHeader,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  VendorAvatar(
+                    name: src?.displayName ?? widget.source,
+                    imageUrl: src?.favicon,
+                    size: 52,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: isPrimary
-                        ? null
-                        : () => watch.setPrimary(widget.source),
-                    icon: Icon(
-                      isPrimary
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          src?.displayName ?? widget.source,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          latestDate == null
+                              ? 'Data terakhir —'
+                              : 'Diperbarui ${Fmt.date(latestDate)}',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ],
                     ),
-                    label: Text(isPrimary ? 'Toko Utama' : 'Jadikan Utama'),
                   ),
-                ),
-                const SizedBox(width: 10),
-                IconButton.outlined(
-                  tooltip: watched ? 'Lepas pantauan' : 'Pantau',
-                  onPressed: () => watch.toggleWatch(widget.source),
-                  icon: Icon(
-                    watched
-                        ? Icons.bookmark_rounded
-                        : Icons.bookmark_border_rounded,
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: SemId(
+                      TestIds.vendorPrimaryButton,
+                      child: FilledButton.icon(
+                        onPressed: isPrimary
+                            ? null
+                            : () => watch.setPrimary(widget.source),
+                        icon: Icon(
+                          isPrimary
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                        ),
+                        label: Text(isPrimary ? 'Toko Utama' : 'Jadikan Utama'),
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 10),
+                  SemId(
+                    TestIds.vendorWatchToggle,
+                    child: IconButton.outlined(
+                      tooltip: watched ? 'Lepas pantauan' : 'Pantau',
+                      onPressed: () => watch.toggleWatch(widget.source),
+                      icon: Icon(
+                        watched
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -284,16 +302,24 @@ class _VendorDetailPageState extends State<VendorDetailPage> {
     final hasSilver = rows.any((p) => p.material.toLowerCase() == 'silver');
     if (!hasSilver) return const SizedBox.shrink();
     return SegmentedButton<String>(
-      segments: const [
+      segments: [
         ButtonSegment(
           value: 'gold',
-          label: Text('Emas'),
-          icon: Icon(Icons.workspace_premium_rounded),
+          label: SemId(
+            TestIds.vendorMaterialSegment('gold'),
+            container: false,
+            child: const Text('Emas'),
+          ),
+          icon: const Icon(Icons.workspace_premium_rounded),
         ),
         ButtonSegment(
           value: 'silver',
-          label: Text('Perak'),
-          icon: Icon(Icons.diamond_outlined),
+          label: SemId(
+            TestIds.vendorMaterialSegment('silver'),
+            container: false,
+            child: const Text('Perak'),
+          ),
+          icon: const Icon(Icons.diamond_outlined),
         ),
       ],
       selected: {_material},
@@ -310,13 +336,16 @@ class _VendorDetailPageState extends State<VendorDetailPage> {
       spacing: 8,
       children: weights
           .map(
-            (w) => ChoiceChip(
-              label: Text(Fmt.gram(w)),
-              selected: _selectedWeight == w,
-              onSelected: (_) {
-                setState(() => _selectedWeight = w);
-                _loadHistory();
-              },
+            (w) => SemId(
+              TestIds.vendorWeightChip(w),
+              child: ChoiceChip(
+                label: Text(Fmt.gram(w)),
+                selected: _selectedWeight == w,
+                onSelected: (_) {
+                  setState(() => _selectedWeight = w);
+                  _loadHistory();
+                },
+              ),
             ),
           )
           .toList(),
@@ -325,26 +354,32 @@ class _VendorDetailPageState extends State<VendorDetailPage> {
 
   Widget _chartCard(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 16, 16, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 8),
-              child: Text(
-                'Riwayat harga ${_selectedWeight == null ? '' : Fmt.gram(_selectedWeight)}',
-                style: const TextStyle(fontWeight: FontWeight.w800),
+    return SemId(
+      TestIds.vendorChartCard,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 16, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 8),
+                child: Text(
+                  'Riwayat harga ${_selectedWeight == null ? '' : Fmt.gram(_selectedWeight)}',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
               ),
-            ),
-            SizedBox(
-              height: 210,
-              child: _loadingHistory
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildChart(context, scheme),
-            ),
-          ],
+              SizedBox(
+                height: 210,
+                child: _loadingHistory
+                    ? const SemId(
+                        TestIds.vendorChartLoading,
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    : _buildChart(context, scheme),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -353,10 +388,13 @@ class _VendorDetailPageState extends State<VendorDetailPage> {
   Widget _buildChart(BuildContext context, ColorScheme scheme) {
     final data = _history.where((p) => p.sellPrice != null).toList();
     if (data.length < 2) {
-      return Center(
-        child: Text(
-          'Riwayat belum cukup untuk grafik.',
-          style: TextStyle(color: scheme.onSurfaceVariant),
+      return SemId(
+        TestIds.vendorChartEmpty,
+        child: Center(
+          child: Text(
+            'Riwayat belum cukup untuk grafik.',
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
         ),
       );
     }
@@ -491,66 +529,71 @@ class _VendorDetailPageState extends State<VendorDetailPage> {
   Widget _priceRow(BuildContext context, GoldPrice p) {
     final scheme = Theme.of(context).colorScheme;
     final selected = p.weight == _selectedWeight;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Card(
-        color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 52,
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  Fmt.gram(p.weight).replaceAll(' gr', ''),
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      Fmt.shortMaterialType(p.materialType),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Buyback ${Fmt.rupiah(p.buybackPrice)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                width: 116,
-                child: PriceText(
-                  Fmt.rupiah(p.sellPrice),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
+    return SemId(
+      TestIds.vendorPriceRow(p.weight, p.materialType),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Card(
+          color: selected
+              ? scheme.primaryContainer.withValues(alpha: 0.4)
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  align: Alignment.centerRight,
+                  child: Text(
+                    Fmt.gram(p.weight).replaceAll(' gr', ''),
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        Fmt.shortMaterialType(p.materialType),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Buyback ${Fmt.rupiah(p.buybackPrice)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  width: 116,
+                  child: PriceText(
+                    Fmt.rupiah(p.sellPrice),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                    align: Alignment.centerRight,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,4 +1,6 @@
+import 'package:emaskuid/core/testing/test_ids.dart';
 import 'package:emaskuid/widgets/message_state.dart';
+import 'package:emaskuid/widgets/sem_id.dart';
 import 'package:emaskuid/widgets/skeleton_list.dart';
 import 'package:flutter/material.dart';
 
@@ -24,24 +26,30 @@ class AsyncStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loading && !hasData) {
-      return const SkeletonList();
+      return const SemId(TestIds.stateLoading, child: SkeletonList());
     }
     if (error != null && error!.isNotEmpty && !hasData) {
-      return MessageState(
-        icon: Icons.cloud_off_rounded,
-        title: 'Gagal memuat',
-        message: error!,
-        actionLabel: 'Coba lagi',
-        onAction: onRetry,
+      return SemId(
+        TestIds.stateError,
+        child: MessageState(
+          icon: Icons.cloud_off_rounded,
+          title: 'Gagal memuat',
+          message: error!,
+          actionLabel: 'Coba lagi',
+          onAction: onRetry,
+        ),
       );
     }
     if (!hasData) {
-      return MessageState(
-        icon: Icons.inbox_rounded,
-        title: 'Kosong',
-        message: emptyMessage,
-        actionLabel: 'Muat ulang',
-        onAction: onRetry,
+      return SemId(
+        TestIds.stateEmpty,
+        child: MessageState(
+          icon: Icons.inbox_rounded,
+          title: 'Kosong',
+          message: emptyMessage,
+          actionLabel: 'Muat ulang',
+          onAction: onRetry,
+        ),
       );
     }
     return RefreshIndicator(onRefresh: () async => onRetry(), child: child);

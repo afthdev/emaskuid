@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:emaskuid/controllers/price_controller.dart';
 import 'package:emaskuid/controllers/transaction_controller.dart';
+import 'package:emaskuid/core/testing/test_ids.dart';
 import 'package:emaskuid/core/utils/formatters.dart';
 import 'package:emaskuid/data/models/models.dart';
 import 'package:emaskuid/widgets/widgets.dart';
@@ -196,12 +197,20 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
               segments: const [
                 ButtonSegment(
                   value: TxType.buy,
-                  label: Text('Beli'),
+                  label: SemId(
+                    TestIds.formBuySegment,
+                    container: false,
+                    child: Text('Beli'),
+                  ),
                   icon: Icon(Icons.south_west_rounded),
                 ),
                 ButtonSegment(
                   value: TxType.sell,
-                  label: Text('Jual'),
+                  label: SemId(
+                    TestIds.formSellSegment,
+                    container: false,
+                    child: Text('Jual'),
+                  ),
                   icon: Icon(Icons.north_east_rounded),
                 ),
               ],
@@ -216,21 +225,27 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
               final current = _source;
               final hasCurrent =
                   current != null && !sources.any((s) => s.name == current);
-              return DropdownButtonFormField<String>(
-                initialValue: current,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Toko',
-                  prefixIcon: Icon(Icons.storefront_rounded),
+              return SemId(
+                TestIds.formVendor,
+                child: DropdownButtonFormField<String>(
+                  initialValue: current,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Toko',
+                    prefixIcon: Icon(Icons.storefront_rounded),
+                  ),
+                  items: [
+                    if (hasCurrent)
+                      DropdownMenuItem(value: current, child: Text(current)),
+                    for (final s in sources)
+                      DropdownMenuItem(
+                        value: s.name,
+                        child: Text(s.displayName),
+                      ),
+                  ],
+                  onChanged: _onVendorChanged,
+                  validator: (v) => v == null ? 'Wajib diisi' : null,
                 ),
-                items: [
-                  if (hasCurrent)
-                    DropdownMenuItem(value: current, child: Text(current)),
-                  for (final s in sources)
-                    DropdownMenuItem(value: s.name, child: Text(s.displayName)),
-                ],
-                onChanged: _onVendorChanged,
-                validator: (v) => v == null ? 'Wajib diisi' : null,
               );
             }),
             const SizedBox(height: 14),
@@ -251,126 +266,151 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                 });
               }
 
-              return DropdownButtonFormField<double>(
-                key: ValueKey('weight-${_source ?? ''}'),
-                initialValue: _weight,
-                decoration: const InputDecoration(
-                  labelText: 'Berat',
-                  prefixIcon: Icon(Icons.scale_rounded),
-                  suffixText: 'gram',
+              return SemId(
+                TestIds.formWeight,
+                child: DropdownButtonFormField<double>(
+                  key: ValueKey('weight-${_source ?? ''}'),
+                  initialValue: _weight,
+                  decoration: const InputDecoration(
+                    labelText: 'Berat',
+                    prefixIcon: Icon(Icons.scale_rounded),
+                    suffixText: 'gram',
+                  ),
+                  items: items
+                      .map(
+                        (w) => DropdownMenuItem(
+                          value: w,
+                          child: Text(Fmt.gram(w)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: items.isEmpty ? null : _onWeightChanged,
+                  validator: (v) => v == null ? 'Pilih berat' : null,
                 ),
-                items: items
-                    .map(
-                      (w) =>
-                          DropdownMenuItem(value: w, child: Text(Fmt.gram(w))),
-                    )
-                    .toList(),
-                onChanged: items.isEmpty ? null : _onWeightChanged,
-                validator: (v) => v == null ? 'Pilih berat' : null,
               );
             }),
             const SizedBox(height: 14),
 
             // 3. Date
-            InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: _pickDate,
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Tanggal',
-                  prefixIcon: Icon(Icons.event_rounded),
-                  suffixIcon: Icon(Icons.arrow_drop_down_rounded),
+            SemId(
+              TestIds.formDate,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: _pickDate,
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Tanggal',
+                    prefixIcon: Icon(Icons.event_rounded),
+                    suffixIcon: Icon(Icons.arrow_drop_down_rounded),
+                  ),
+                  child: Text(Fmt.date(_date)),
                 ),
-                child: Text(Fmt.date(_date)),
               ),
             ),
             const SizedBox(height: 14),
 
             // 4. Price (custom, or the toko's price on that date)
-            TextFormField(
-              controller: _priceCtrl,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+            SemTag(
+              TestIds.formPrice,
+              child: TextFormField(
+                key: const ValueKey(TestIds.formPrice),
+                controller: _priceCtrl,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [ThousandsInputFormatter()],
+                onChanged: (_) => setState(() => _priceEdited = true),
+                decoration: const InputDecoration(
+                  labelText: 'Harga total',
+                  prefixText: 'Rp',
+                  prefixIcon: Icon(Icons.payments_rounded),
+                ),
+                validator: (v) =>
+                    _enteredPrice <= 0 ? 'Harga harus lebih dari 0' : null,
               ),
-              inputFormatters: [ThousandsInputFormatter()],
-              onChanged: (_) => setState(() => _priceEdited = true),
-              decoration: const InputDecoration(
-                labelText: 'Harga total',
-                prefixText: 'Rp',
-                prefixIcon: Icon(Icons.payments_rounded),
-              ),
-              validator: (v) =>
-                  _enteredPrice <= 0 ? 'Harga harus lebih dari 0' : null,
             ),
             const SizedBox(height: 10),
             _priceHint(scheme),
 
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer.withValues(alpha: 0.45),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.calculate_rounded, color: scheme.primary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Total'),
-                        Text(
-                          '@ ${Fmt.rupiah(_pricePerGram)}/gr'
-                          '${_weight == null ? '' : ' • ${Fmt.gram(_weight)}'}',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: scheme.onSurfaceVariant,
+            SemId(
+              TestIds.formTotal,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.calculate_rounded, color: scheme.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Total'),
+                          Text(
+                            '@ ${Fmt.rupiah(_pricePerGram)}/gr'
+                            '${_weight == null ? '' : ' • ${Fmt.gram(_weight)}'}',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Text(
-                    Fmt.rupiah(_total),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17,
+                    Text(
+                      Fmt.rupiah(_total),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 17,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 14),
 
             // 5. Note
-            TextFormField(
-              controller: _noteCtrl,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Catatan (opsional)',
-                prefixIcon: Icon(Icons.notes_rounded),
+            SemTag(
+              TestIds.formNote,
+              child: TextFormField(
+                key: const ValueKey(TestIds.formNote),
+                controller: _noteCtrl,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Catatan (opsional)',
+                  prefixIcon: Icon(Icons.notes_rounded),
+                ),
               ),
             ),
             const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: _save,
-              icon: const Icon(Icons.save_rounded),
-              label: Text(_isEdit ? 'Simpan Perubahan' : 'Simpan Transaksi'),
+            SemId(
+              TestIds.formSubmit,
+              child: FilledButton.icon(
+                onPressed: _save,
+                icon: const Icon(Icons.save_rounded),
+                label: Text(_isEdit ? 'Simpan Perubahan' : 'Simpan Transaksi'),
+              ),
             ),
             if (_isEdit) ...[
               const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  await wallet.delete(widget.existing!.id!);
-                  if (mounted) Get.back();
-                },
-                icon: const Icon(Icons.delete_outline_rounded),
-                label: const Text('Hapus'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  foregroundColor: scheme.error,
+              SemId(
+                TestIds.formDelete,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    await wallet.delete(widget.existing!.id!);
+                    if (mounted) Get.back();
+                  },
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  label: const Text('Hapus'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                    foregroundColor: scheme.error,
+                  ),
                 ),
               ),
             ],
@@ -384,72 +424,90 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   /// apply it instead of typing a custom price.
   Widget _priceHint(ColorScheme scheme) {
     if (_source == null || _weight == null) {
-      return Text(
-        'Pilih toko dan berat untuk memakai harga pasar pada tanggal ini.',
-        style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant),
+      return SemId(
+        TestIds.formMarketPriceHint,
+        child: Text(
+          'Pilih toko dan berat untuk memakai harga pasar pada tanggal ini.',
+          style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant),
+        ),
       );
     }
     if (_loadingPrice) {
-      return Row(
-        children: [
-          SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: scheme.primary,
+      return SemId(
+        TestIds.formMarketPriceLoading,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: scheme.primary,
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Mencari harga pasar pada ${Fmt.date(_date)}…',
-            style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant),
-          ),
-        ],
+            const SizedBox(width: 8),
+            Text(
+              'Mencari harga pasar pada ${Fmt.date(_date)}…',
+              style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant),
+            ),
+          ],
+        ),
       );
     }
 
     final suggested = _suggested;
     if (suggested?.sellPrice == null) {
-      return Text(
-        'Harga pasar untuk tanggal ini tidak tersedia. Isi harga secara manual.',
-        style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant),
+      return SemId(
+        TestIds.formMarketPriceHint,
+        child: Text(
+          'Harga pasar untuk tanggal ini tidak tersedia. Isi harga secara manual.',
+          style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant),
+        ),
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-      decoration: BoxDecoration(
-        color: scheme.primaryContainer.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.history_rounded, size: 18, color: scheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Harga pasar ${Fmt.date(Fmt.parseDate(suggested!.recordedDate))}',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: scheme.onSurfaceVariant,
+    return SemId(
+      TestIds.formMarketPriceHint,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        decoration: BoxDecoration(
+          color: scheme.primaryContainer.withValues(alpha: 0.35),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.history_rounded, size: 18, color: scheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Harga pasar ${Fmt.date(Fmt.parseDate(suggested!.recordedDate))}',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-                Text(
-                  '${Fmt.rupiah(suggested.sellPrice)} untuk ${Fmt.gram(suggested.weight)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
+                  Text(
+                    '${Fmt.rupiah(suggested.sellPrice)} untuk ${Fmt.gram(suggested.weight)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          TextButton(onPressed: _useMarketPrice, child: const Text('Pakai')),
-        ],
+            SemId(
+              TestIds.formUseMarketPrice,
+              child: TextButton(
+                onPressed: _useMarketPrice,
+                child: const Text('Pakai'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

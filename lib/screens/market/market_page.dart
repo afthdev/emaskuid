@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:emaskuid/controllers/price_controller.dart';
 import 'package:emaskuid/controllers/watchlist_controller.dart';
+import 'package:emaskuid/core/testing/test_ids.dart';
 import 'package:emaskuid/core/utils/formatters.dart';
 import 'package:emaskuid/data/models/models.dart';
 import 'package:emaskuid/widgets/widgets.dart';
@@ -36,12 +37,17 @@ class _MarketPageState extends State<MarketPage> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-            child: TextField(
-              controller: _search,
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-              decoration: const InputDecoration(
-                hintText: 'Cari toko…',
-                prefixIcon: Icon(Icons.search_rounded),
+            child: SemTag(
+              TestIds.marketSearch,
+              child: TextField(
+                key: const ValueKey(TestIds.marketSearch),
+                controller: _search,
+                onChanged: (v) =>
+                    setState(() => _query = v.trim().toLowerCase()),
+                decoration: const InputDecoration(
+                  hintText: 'Cari toko…',
+                  prefixIcon: Icon(Icons.search_rounded),
+                ),
               ),
             ),
           ),
@@ -90,70 +96,81 @@ class _MarketPageState extends State<MarketPage> {
     return Obx(() {
       final isPrimary = watch.primary.value == source.name;
       final watched = watch.isWatched(source.name);
-      return Card(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () => Get.to(() => VendorDetailPage(source: source.name)),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                VendorAvatar(
-                  name: source.displayName,
-                  imageUrl: source.favicon,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              source.displayName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15,
+      return SemId(
+        TestIds.marketVendorItem(source.name),
+        child: Card(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => Get.to(() => VendorDetailPage(source: source.name)),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  VendorAvatar(
+                    name: source.displayName,
+                    imageUrl: source.favicon,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                source.displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                ),
                               ),
                             ),
-                          ),
-                          if (isPrimary) ...[
-                            const SizedBox(width: 6),
-                            const Pill(text: 'Utama', icon: Icons.star_rounded),
+                            if (isPrimary) ...[
+                              const SizedBox(width: 6),
+                              const Pill(
+                                text: 'Utama',
+                                icon: Icons.star_rounded,
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        ref == null
-                            ? 'Harga belum tersedia'
-                            : '1 gr ${Fmt.rupiah(ref.sellPrice)} • buyback ${Fmt.rupiahCompact(ref.buybackPrice)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
+                        const SizedBox(height: 3),
+                        Text(
+                          ref == null
+                              ? 'Harga belum tersedia'
+                              : '1 gr ${Fmt.rupiah(ref.sellPrice)} • buyback ${Fmt.rupiahCompact(ref.buybackPrice)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SemId(
+                    TestIds.marketWatchToggle(source.name),
+                    child: IconButton(
+                      tooltip: watched ? 'Lepas pantauan' : 'Pantau harga',
+                      onPressed: () => watch.toggleWatch(source.name),
+                      icon: Icon(
+                        watched
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                        color: watched
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                IconButton(
-                  tooltip: watched ? 'Lepas pantauan' : 'Pantau harga',
-                  onPressed: () => watch.toggleWatch(source.name),
-                  icon: Icon(
-                    watched
-                        ? Icons.bookmark_rounded
-                        : Icons.bookmark_border_rounded,
-                    color: watched
-                        ? Theme.of(context).colorScheme.primary
-                        : null,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

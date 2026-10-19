@@ -1,3 +1,5 @@
+import 'package:emaskuid/core/testing/test_ids.dart';
+import 'package:emaskuid/widgets/sem_id.dart';
 import 'package:flutter/material.dart';
 
 /// Centered icon + message + action, used for empty and error states.
@@ -39,10 +41,13 @@ class MessageState extends StatelessWidget {
               style: TextStyle(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 18),
-            OutlinedButton.icon(
-              onPressed: onAction,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(actionLabel),
+            SemId(
+              TestIds.actionRetry,
+              child: OutlinedButton.icon(
+                onPressed: onAction,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(actionLabel),
+              ),
             ),
           ],
         ),
